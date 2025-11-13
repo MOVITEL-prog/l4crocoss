@@ -1,0 +1,176 @@
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
+
+// ==================== ROTAS PRINCIPAIS ====================
+
+// Página inicial
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Callback do Google OAuth
+app.get('/auth/callback', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'auth', 'callback.html'));
+});
+
+// ==================== API ====================
+
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: '✅ ONLINE',
+        service: 'L4CROCOSS Server',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        endpoints: {
+            home: '/',
+            auth: '/auth/callback',
+            products: '/api/products',
+            health: '/api/health'
+        }
+    });
+});
+
+// API de produtos (mock data baseada nas suas imagens)
+app.get('/api/products', (req, res) => {
+    const products = [
+        {
+            id: 1,
+            name: "Smartphone Samsung",
+            price: 15000.00,
+            originalPrice: 16500.00,
+            description: "12RAM 256GB DE ARMAZENAMENTO - O melhor smartphone do mercado",
+            category: "eletrônicos",
+            stock: 16,
+            sku: "SAM-12-256",
+            rating: 4.5,
+            reviewCount: 12,
+            images: [
+                "https://images.samsung.com/is/image/samsung/p6pim/br/2401/gallery/br-galaxy-s24-s928-sm-s928bztgztc-539126864",
+                "https://images.samsung.com/is/image/samsung/p6pim/br/2401/gallery/br-galaxy-s24-s928-sm-s928bztgztc-539126865"
+            ],
+            features: ["12GB RAM", "256GB Armazenamento", "Câmera Tripla", "5G"],
+            specifications: {
+                tela: "6.7 Polegadas",
+                processador: "Snapdragon 8 Gen 3",
+                bateria: "5000mAh",
+                camera: "200MP + 50MP + 12MP"
+            }
+        },
+        {
+            id: 2,
+            name: "Honda Civic",
+            price: 155000.00,
+            originalPrice: 160000.00,
+            description: "Carro esportivo familiar - Novo modelo 2024",
+            category: "automóveis",
+            stock: 1,
+            sku: "HON-CIV-2024",
+            rating: 4.8,
+            reviewCount: 8,
+            images: [
+                "https://www.honda.com.br/automoveis/sites/hda/files/2023-08/civic.png",
+                "https://www.honda.com.br/automoveis/sites/hda/files/2023-08/civic-lateral.png"
+            ],
+            features: ["Motor 2.0", "Automático", "Ar Condicionado", "Multimídia"],
+            specifications: {
+                motor: "2.0 16V",
+                transmissao: "Automática CVT",
+                combustivel: "Flex",
+                portas: "4"
+            }
+        },
+        {
+            id: 3,
+            name: "CHAPEU Cyber",
+            price: 255.00,
+            originalPrice: 300.00,
+            description: "Chapéu estilo cyberpunk - Moda futurista",
+            category: "moda",
+            stock: 25,
+            sku: "CHP-CYB-001",
+            rating: 4.3,
+            reviewCount: 15,
+            images: [
+                "/assets/cyber-hat.jpg"
+            ],
+            features: ["Estilo Cyberpunk", "Ajustável", "Material Premium"],
+            specifications: {
+                material: "Poliéster",
+                tamanho: "Ajustável",
+                cor: "Preto Metalizado"
+            }
+        }
+    ];
+    
+    res.json({
+        success: true,
+        count: products.length,
+        data: products
+    });
+});
+
+// API para um produto específico
+app.get('/api/products/:id', (req, res) => {
+    const productId = parseInt(req.params.id);
+    const products = [
+        {
+            id: 1,
+            name: "Smartphone Samsung",
+            price: 15000.00,
+            // ... mesmo objeto do array acima
+        }
+        // ... outros produtos
+    ];
+    
+    const product = products.find(p => p.id === productId);
+    
+    if (!product) {
+        return res.status(404).json({
+            success: false,
+            message: 'Produto não encontrado'
+        });
+    }
+    
+    res.json({
+        success: true,
+        data: product
+    });
+});
+
+// ==================== INICIAR SERVIDOR ====================
+
+app.listen(PORT, () => {
+    console.log(`\n🚀 L4CROCOSS SERVER INICIADO!`);
+    console.log(`📍 URL: http://localhost:${PORT}`);
+    console.log(`🔍 Health: http://localhost:${PORT}/api/health`);
+    console.log(`🛍️ Products: http://localhost:${PORT}/api/products`);
+    console.log(`\n⭐ Pronto para começar! Acesse: http://localhost:${PORT}\n`);
+});
+
+// Tratamento de erros
+app.use((err, req, res, next) => {
+    console.error('Erro no servidor:', err);
+    res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+    });
+});
+
+// Rota não encontrada
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: 'Rota não encontrada'
+    });
+});
